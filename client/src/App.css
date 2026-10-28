@@ -6,8 +6,19 @@
 }
 
 .app h1 {
-  margin: 0 0 16px;
+  margin: 0 0 4px;
   font-size: 28px;
+}
+
+.status {
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+.status-p0 {
+  color: var(--p0);
+}
+.status-p1 {
+  color: var(--p1);
 }
 
 /* --- 보드 --- */
@@ -63,6 +74,50 @@
 .pawn-p1 circle {
   fill: var(--p1);
 }
+.pawn .pawn-ring {
+  fill: none;
+  stroke-width: 3;
+}
+.pawn-p0 .pawn-ring {
+  stroke: var(--p0);
+}
+.pawn-p1 .pawn-ring {
+  stroke: var(--p1);
+}
+
+/* --- 이동 가능한 칸 --- */
+
+.move-p0 {
+  --move: var(--p0);
+}
+.move-p1 {
+  --move: var(--p1);
+}
+.move-target {
+  cursor: pointer;
+  outline: none;
+}
+.move-target rect {
+  fill: var(--move);
+  fill-opacity: 0;
+  stroke: var(--move);
+  stroke-opacity: 0.5;
+  stroke-width: 2;
+}
+.move-target circle {
+  fill: var(--move);
+  fill-opacity: 0.55;
+}
+.move-target:hover rect,
+.move-target:focus-visible rect {
+  fill-opacity: 0.18;
+  stroke-opacity: 1;
+}
+.move-target:hover circle,
+.move-target:focus-visible circle {
+  fill-opacity: 0.9;
+}
+
 .pawn text {
   fill: var(--on-pawn);
   font-size: 16px;

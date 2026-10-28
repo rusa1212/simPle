@@ -11,7 +11,7 @@ import {
 
 const PLAYER_NAMES = ['A', 'B']
 
-function Board({ game }) {
+function Board({ game, moves = [], onMove }) {
   const { size } = game.config
   const pixels = boardPixels(size)
   const indices = [...Array(size).keys()]
@@ -74,12 +74,41 @@ function Board({ game }) {
       <g className="pawns">
         {game.players.map((player, i) => {
           const { cx, cy } = cellCenter(size, player.pos.x, player.pos.y)
+          const active = i === game.current && game.winner === null
           return (
-            <g key={i} className={`pawn pawn-p${i}`}>
+            <g key={i} className={`pawn pawn-p${i}${active ? ' active' : ''}`}>
+              {active && <circle className="pawn-ring" cx={cx} cy={cy} r={CELL * 0.44} />}
               <circle cx={cx} cy={cy} r={CELL * 0.34} />
               <text x={cx} y={cy}>
                 {PLAYER_NAMES[i]}
               </text>
+            </g>
+          )
+        })}
+      </g>
+
+      <g className={`move-targets move-p${game.current}`}>
+        {moves.map((pos) => {
+          const { left, top } = cellOrigin(size, pos.x, pos.y)
+          const { cx, cy } = cellCenter(size, pos.x, pos.y)
+          const name = `${columnLabel(pos.x)}${rowLabel(pos.y)}`
+          return (
+            <g
+              key={name}
+              className="move-target"
+              role="button"
+              tabIndex={0}
+              aria-label={`${name}(으)로 이동`}
+              onClick={() => onMove?.(pos)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onMove?.(pos)
+                }
+              }}
+            >
+              <rect x={left} y={top} width={CELL} height={CELL} rx={6} />
+              <circle cx={cx} cy={cy} r={CELL * 0.14} />
             </g>
           )
         })}
