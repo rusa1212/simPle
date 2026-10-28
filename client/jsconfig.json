@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@game": ["../shared/game/index.ts"]
+    }
+  },
+  "include": ["src"]
+}
