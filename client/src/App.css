@@ -95,8 +95,11 @@
 .hint {
   margin: 8px 0 0;
   min-height: 1.5em;
-  color: var(--danger);
+  color: var(--text-muted);
   font-size: 14px;
+}
+.hint.error {
+  color: var(--danger);
 }
 
 /* --- 보드 --- */
@@ -129,21 +132,53 @@
 }
 
 .wall-p0 {
-  fill: var(--p0);
+  --wall: var(--p0);
 }
 .wall-p1 {
-  fill: var(--p1);
+  --wall: var(--p1);
 }
-.wall-temp {
+.wall-body {
+  fill: var(--wall);
+}
+.wall-temp .wall-body {
   fill-opacity: 0.45;
+  stroke: var(--wall);
   stroke-width: 1.5;
   stroke-dasharray: 4 3;
 }
-.wall-temp.wall-p0 {
-  stroke: var(--p0);
+.wall-timer circle {
+  fill: var(--cell);
+  stroke: var(--wall);
+  stroke-width: 1.5;
 }
-.wall-temp.wall-p1 {
-  stroke: var(--p1);
+.wall-timer text {
+  fill: var(--wall);
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* 철거 모드: 상대 막대만 고를 수 있다 */
+.wall-hit {
+  fill: transparent;
+}
+.walls.removing .wall:not(.removable) {
+  opacity: 0.35;
+}
+.wall.removable {
+  cursor: pointer;
+  outline: none;
+}
+.wall.removable .wall-body {
+  stroke: var(--danger);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.wall.removable:hover .wall-body,
+.wall.removable:focus-visible .wall-body {
+  fill: var(--danger);
+  fill-opacity: 1;
 }
 
 .pawn-p0 circle {

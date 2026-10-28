@@ -6,8 +6,20 @@ const WALL_TOOLS = [
   { kind: 'temp', name: '임시 막대' },
 ]
 
-/** tool: 'move' 또는 막대 종류. inventory: 현재 플레이어의 남은 개수. */
-function Toolbar({ tool, onToolChange, orientation, onOrientationChange, inventory, player, disabled }) {
+/**
+ * tool: 'move', 막대 종류, 'remover' 중 하나. inventory: 현재 플레이어의 남은 개수.
+ * canRemove: 철거할 상대 막대가 있는지.
+ */
+function Toolbar({
+  tool,
+  onToolChange,
+  orientation,
+  onOrientationChange,
+  inventory,
+  canRemove,
+  player,
+  disabled,
+}) {
   return (
     <div className={`toolbar toolbar-p${player}`} role="toolbar" aria-label="행동 선택">
       <button
@@ -32,6 +44,15 @@ function Toolbar({ tool, onToolChange, orientation, onOrientationChange, invento
           </span>
         </button>
       ))}
+      <button
+        type="button"
+        aria-pressed={tool === 'remover'}
+        onClick={() => onToolChange('remover')}
+        disabled={disabled || inventory.remover <= 0 || !canRemove}
+      >
+        철거 도구
+        <span className="tool-meta">상대 막대 · {inventory.remover}개</span>
+      </button>
       <button
         type="button"
         className="orientation"

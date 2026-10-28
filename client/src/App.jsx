@@ -5,6 +5,7 @@ import Toolbar from './components/Toolbar'
 import './App.css'
 
 const PLAYER_NAMES = ['A', 'B']
+const WALL_KINDS = ['normal', 'long', 'temp']
 
 function App() {
   const [game, setGame] = useState(() => createGame())
@@ -13,8 +14,14 @@ function App() {
   const [previewError, setPreviewError] = useState(null)
 
   const over = game.winner !== null
-  const placing = tool !== 'move' && !over
-  const moves = !over && !placing ? getPawnMoves(game, game.current) : []
+  const placing = WALL_KINDS.includes(tool) && !over
+  const removing = tool === 'remover' && !over
+  const moves = !over && tool === 'move' ? getPawnMoves(game, game.current) : []
+  const canRemove = game.walls.some((w) => w.owner !== game.current)
+
+  let hint = null
+  if (placing && previewError) hint = { text: previewError, error: true }
+  else if (removing) hint = { text: '철거할 상대 막대를 클릭하세요 (Esc: 취소)', error: false }
 
   const play = (action) => {
     setGame((g) => applyAction(g, action))
@@ -43,6 +50,7 @@ function App() {
         orientation={orientation}
         onOrientationChange={setOrientation}
         inventory={game.players[game.current].inventory}
+        canRemove={canRemove}
         player={game.current}
         disabled={over}
       />
@@ -53,9 +61,11 @@ function App() {
         wallTool={placing ? { kind: tool, orientation } : null}
         onPlaceWall={play}
         onPreviewChange={setPreviewError}
+        removing={removing}
+        onRemoveWall={(wallId) => play({ type: 'remove', wallId })}
       />
-      <p className="hint" aria-live="polite">
-        {placing && previewError ? previewError : ' '}
+      <p className={`hint${hint?.error ? ' error' : ''}`} aria-live="polite">
+        {hint ? hint.text : ' '}
       </p>
     </main>
   )

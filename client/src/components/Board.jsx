@@ -16,9 +16,19 @@ const PLAYER_NAMES = ['A', 'B']
 
 /**
  * wallTool이 있으면 막대 설치 모드: 마우스 위치에 미리보기를 띄우고 클릭하면 onPlaceWall을 부른다.
- * 없으면 이동 모드: moves 칸을 표시하고 클릭하면 onMove를 부른다.
+ * removing이면 철거 모드: 상대 막대를 클릭하면 onRemoveWall을 부른다.
+ * 둘 다 아니면 이동 모드: moves 칸을 표시하고 클릭하면 onMove를 부른다.
  */
-function Board({ game, moves = [], onMove, wallTool, onPlaceWall, onPreviewChange }) {
+function Board({
+  game,
+  moves = [],
+  onMove,
+  wallTool,
+  onPlaceWall,
+  onPreviewChange,
+  removing,
+  onRemoveWall,
+}) {
   const { size } = game.config
   const pixels = boardPixels(size)
   const indices = [...Array(size).keys()]
@@ -111,15 +121,52 @@ function Board({ game, moves = [], onMove, wallTool, onPlaceWall, onPreviewChang
         ))}
       </g>
 
-      <g className="walls">
-        {game.walls.map((wall) => (
-          <rect
-            key={wall.id}
-            className={`wall wall-p${wall.owner} wall-${wall.kind}`}
-            {...wallRect(size, wall)}
-            rx={3}
-          />
-        ))}
+      <g className={`walls${removing ? ' removing' : ''}`}>
+        {game.walls.map((wall) => {
+          const rect = wallRect(size, wall)
+          const removable = removing && wall.owner !== game.current
+          const remaining = wall.expiresAt === null ? null : wall.expiresAt - game.turn
+          const remove = () => onRemoveWall?.(wall.id)
+          return (
+            <g
+              key={wall.id}
+              className={`wall wall-p${wall.owner} wall-${wall.kind}${removable ? ' removable' : ''}`}
+              {...(removable && {
+                role: 'button',
+                tabIndex: 0,
+                'aria-label': `${PLAYER_NAMES[wall.owner]}의 막대 철거`,
+                onClick: remove,
+                onKeyDown: (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    remove()
+                  }
+                },
+              })}
+            >
+              {removable && (
+                // 막대가 얇아서 클릭하기 쉽도록 넓은 투명 영역을 깐다
+                <rect
+                  className="wall-hit"
+                  x={rect.x - 6}
+                  y={rect.y - 6}
+                  width={rect.width + 12}
+                  height={rect.height + 12}
+                />
+              )}
+              <rect className="wall-body" {...rect} rx={3} />
+              {remaining !== null && (
+                <g className="wall-timer">
+                  <title>{`${remaining}수 뒤 사라짐`}</title>
+                  <circle cx={rect.x + rect.width / 2} cy={rect.y + rect.height / 2} r={9} />
+                  <text x={rect.x + rect.width / 2} y={rect.y + rect.height / 2}>
+                    {remaining}
+                  </text>
+                </g>
+              )}
+            </g>
+          )
+        })}
       </g>
 
       <g className="pawns">
