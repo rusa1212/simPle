@@ -1,184 +1,368 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  box-sizing: border-box;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
+.app-header {
   display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 4px;
+}
+.app h1 {
+  margin: 0;
+  font-size: 28px;
 }
 
-#next-steps {
+.game-actions {
   display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+}
+.game-actions button {
+  padding: 6px 12px;
+  border: 1.5px solid var(--groove);
+  border-radius: 8px;
+  background: var(--cell);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.game-actions button:hover:not(:disabled) {
+  border-color: var(--text-muted);
+}
+.game-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+/* --- 플레이어 패널 --- */
+
+.players {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.player-p0 {
+  --pc: var(--p0);
+}
+.player-p1 {
+  --pc: var(--p1);
+}
+.player {
+  padding: 10px 12px;
+  border: 1.5px solid var(--groove);
+  border-radius: 12px;
+  background: var(--cell);
+}
+.player.active,
+.player.won {
+  border-color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 8%, var(--cell));
+}
+.player header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.player-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--pc);
+  color: var(--on-pawn);
+  font-size: 13px;
+  font-weight: 700;
+}
+.player-tag {
+  color: var(--pc);
+  font-size: 13px;
+  font-weight: 700;
+}
+.player-path {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.inventory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.inventory strong {
+  color: var(--text-h);
+}
+.inventory .empty {
+  opacity: 0.45;
 }
 
-.ticks {
-  position: relative;
+.status {
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+.status-p0 {
+  color: var(--p0);
+}
+.status-p1 {
+  color: var(--p1);
+}
+
+/* --- 도구 --- */
+
+.toolbar-p0 {
+  --accent: var(--p0);
+}
+.toolbar-p1 {
+  --accent: var(--p1);
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.toolbar button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--groove);
+  border-radius: 10px;
+  background: var(--cell);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.toolbar button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.toolbar button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--cell));
+}
+.toolbar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.toolbar button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.toolbar .orientation {
+  margin-left: auto;
+}
+.orientation-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.orientation-icon {
+  display: inline-block;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.orientation-icon.h {
+  width: 16px;
+  height: 4px;
+}
+.orientation-icon.v {
+  width: 4px;
+  height: 16px;
+}
+.tool-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.hint {
+  margin: 8px 0 0;
+  min-height: 1.5em;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.hint.error {
+  color: var(--danger);
+}
+
+/* --- 보드 --- */
+
+.board {
+  display: block;
   width: 100%;
+  height: auto;
+  padding: 12px;
+  box-sizing: border-box;
+  background: var(--board-bg);
+  border-radius: 14px;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
+.cell {
+  fill: var(--cell);
+}
+.cell.goal-p0 {
+  fill: color-mix(in srgb, var(--p0) 16%, var(--cell));
+}
+.cell.goal-p1 {
+  fill: color-mix(in srgb, var(--p1) 16%, var(--cell));
+}
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
+.labels text {
+  fill: var(--text-muted);
+  font-size: 12px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.wall-p0 {
+  --wall: var(--p0);
+}
+.wall-p1 {
+  --wall: var(--p1);
+}
+.wall-body {
+  fill: var(--wall);
+}
+.wall-temp .wall-body {
+  fill-opacity: 0.45;
+  stroke: var(--wall);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.wall-timer circle {
+  fill: var(--cell);
+  stroke: var(--wall);
+  stroke-width: 1.5;
+}
+.wall-timer text {
+  fill: var(--wall);
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* 철거 모드: 상대 막대만 고를 수 있다 */
+.wall-hit {
+  fill: transparent;
+}
+.walls.removing .wall:not(.removable) {
+  opacity: 0.35;
+}
+.wall.removable {
+  cursor: pointer;
+  outline: none;
+}
+.wall.removable .wall-body {
+  stroke: var(--danger);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.wall.removable:hover .wall-body,
+.wall.removable:focus-visible .wall-body {
+  fill: var(--danger);
+  fill-opacity: 1;
+}
+
+.pawn-p0 circle {
+  fill: var(--p0);
+}
+.pawn-p1 circle {
+  fill: var(--p1);
+}
+.board.placing {
+  cursor: crosshair;
+}
+
+.wall-preview {
+  pointer-events: none;
+}
+.wall-preview.valid.wall-preview-p0 {
+  fill: var(--p0);
+}
+.wall-preview.valid.wall-preview-p1 {
+  fill: var(--p1);
+}
+.wall-preview.valid {
+  fill-opacity: 0.5;
+}
+.wall-preview.invalid {
+  fill: var(--danger);
+  fill-opacity: 0.75;
+}
+
+.pawn .pawn-ring {
+  fill: none;
+  stroke-width: 3;
+}
+.pawn-p0 .pawn-ring {
+  stroke: var(--p0);
+}
+.pawn-p1 .pawn-ring {
+  stroke: var(--p1);
+}
+
+/* --- 이동 가능한 칸 --- */
+
+.move-p0 {
+  --move: var(--p0);
+}
+.move-p1 {
+  --move: var(--p1);
+}
+.move-target {
+  cursor: pointer;
+  outline: none;
+}
+.move-target rect {
+  fill: var(--move);
+  fill-opacity: 0;
+  stroke: var(--move);
+  stroke-opacity: 0.5;
+  stroke-width: 2;
+}
+.move-target circle {
+  fill: var(--move);
+  fill-opacity: 0.55;
+}
+.move-target:hover rect,
+.move-target:focus-visible rect {
+  fill-opacity: 0.18;
+  stroke-opacity: 1;
+}
+.move-target:hover circle,
+.move-target:focus-visible circle {
+  fill-opacity: 0.9;
+}
+
+.pawn text {
+  fill: var(--on-pawn);
+  font-size: 16px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
 }
