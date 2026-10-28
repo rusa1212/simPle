@@ -10,6 +10,7 @@
 
   --p0: #2f6fd6;
   --p1: #d4572a;
+  --danger: #d4202a;
   --on-pawn: #ffffff;
 
   --sans: system-ui, 'Segoe UI', 'Malgun Gothic', sans-serif;
@@ -34,6 +35,7 @@
 
     --p0: #6aa0ff;
     --p1: #ff8a5c;
+    --danger: #ff5c63;
     --on-pawn: #17181c;
   }
 }

@@ -32,5 +32,31 @@ export function wallRect(size, { orientation, x, y, length }) {
   return { x: left + CELL, y: top, width: GAP, height: span }
 }
 
+const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
+
+/**
+ * SVG 좌표의 마우스 위치에서 가장 가까운 홈에 놓일 막대 위치를 구한다.
+ * 막대 가운데가 마우스 쪽으로 오도록 잡는다. 보드 밖이면 null.
+ */
+export function wallAtPoint(size, px, py, orientation, length) {
+  const pixels = boardPixels(size)
+  if (px < 0 || py < 0 || px > pixels || py > pixels) return null
+  // 칸 i가 [i, i+1) 구간이 되도록 홈 폭의 절반만큼 밀어서 칸 단위로 바꾼다
+  const u = (px + GAP / 2) / STEP
+  const v = (py + GAP / 2) / STEP
+  if (orientation === 'h') {
+    const boundary = clamp(Math.round(v), 1, size - 1) // 화면 위에서부터 몇 번째 가로 홈인지
+    return {
+      orientation,
+      x: clamp(Math.round(u - length / 2), 0, size - length),
+      y: size - 1 - boundary,
+      length,
+    }
+  }
+  const boundary = clamp(Math.round(u), 1, size - 1)
+  const topRow = clamp(Math.round(v - length / 2), 0, size - length)
+  return { orientation, x: boundary - 1, y: size - topRow - length, length }
+}
+
 export const columnLabel = (x) => String.fromCharCode(97 + x)
 export const rowLabel = (y) => String(y + 1)
