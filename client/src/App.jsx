@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { applyAction, createGame, getPawnMoves } from '@game'
 import Board from './components/Board'
 import PlayerPanel from './components/PlayerPanel'
@@ -7,6 +7,13 @@ import './App.css'
 
 const PLAYER_NAMES = ['A', 'B']
 const WALL_KINDS = ['normal', 'long', 'temp']
+// AI 상대는 B(나중에 두는 쪽)를 맡는다
+const AI_PLAYER = 1
+const OPPONENTS = [
+  { depth: 0, name: '사람' },
+  { depth: 2, name: 'AI (보통)' },
+  { depth: 3, name: 'AI (어려움)' },
+]
 
 function App() {
   // 지금까지의 모든 상태. 마지막이 현재 상태이고, 무르기는 마지막을 빼는 것이다.
@@ -15,13 +22,19 @@ function App() {
   const [orientation, setOrientation] = useState('h')
   const [previewError, setPreviewError] = useState(null)
   const [showPaths, setShowPaths] = useState(false)
+  // 0이면 사람 대 사람, 아니면 AI 탐색 깊이
+  const [aiDepth, setAiDepth] = useState(0)
 
   const game = history.at(-1)
   const canUndo = history.length > 1
   const over = game.winner !== null
-  const placing = WALL_KINDS.includes(tool) && !over
-  const removing = tool === 'remover' && !over
-  const moves = !over && tool === 'move' ? getPawnMoves(game, game.current) : []
+  const isAiTurn = (s) => aiDepth > 0 && s.winner === null && s.current === AI_PLAYER
+  const thinking = isAiTurn(game)
+  // AI가 생각하는 동안은 사람이 둘 수 없다
+  const locked = over || thinking
+  const placing = WALL_KINDS.includes(tool) && !locked
+  const removing = tool === 'remover' && !locked
+  const moves = !locked && tool === 'move' ? getPawnMoves(game, game.current) : []
   const canRemove = game.walls.some((w) => w.owner !== game.current)
 
   let hint = null
@@ -32,8 +45,13 @@ function App() {
     setHistory((h) => [...h, applyAction(h.at(-1), action)])
     setTool('move')
   }
+  // AI 상대일 때는 AI의 수까지 함께 물러서 사람 차례로 돌아간다
   const undo = () => {
-    setHistory((h) => (h.length > 1 ? h.slice(0, -1) : h))
+    setHistory((h) => {
+      let n = h.length - 1
+      while (n > 1 && isAiTurn(h[n - 1])) n--
+      return n > 0 ? h.slice(0, n) : h
+    })
     setTool('move')
   }
   // 새 게임도 기록에 쌓아서, 실수로 눌렀을 때 무르기로 되돌릴 수 있게 한다
@@ -42,19 +60,34 @@ function App() {
     setTool('move')
   }
 
+  // AI 차례가 되면 Worker에서 수를 계산해 둔다. 그 사이 무르기나 새 게임으로 상태가 바뀌면 계산을 버린다.
   useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.target instanceof HTMLElement && e.target.closest('input, textarea')) return
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
-        e.preventDefault()
-        undo()
-        return
-      }
-      if (e.key === 'r' || e.key === 'R') setOrientation((o) => (o === 'h' ? 'v' : 'h'))
-      if (e.key === 'Escape') setTool('move')
+    if (!thinking) return
+    const worker = new Worker(new URL('./ai.worker.js', import.meta.url), { type: 'module' })
+    worker.onmessage = (e) => {
+      if (e.data) play(e.data)
+      worker.terminate()
     }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    worker.postMessage({ state: game, depth: aiDepth })
+    return () => worker.terminate()
+  }, [game, thinking, aiDepth])
+
+  // 상대 설정에 따라 무르기 동작이 달라지므로 항상 최신 undo를 부르도록 Effect Event로 둔다
+  const onKeyDown = useEffectEvent((e) => {
+    if (e.target instanceof HTMLElement && e.target.closest('input, textarea')) return
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+      e.preventDefault()
+      undo()
+      return
+    }
+    if (e.key === 'r' || e.key === 'R') setOrientation((o) => (o === 'h' ? 'v' : 'h'))
+    if (e.key === 'Escape') setTool('move')
+  })
+
+  useEffect(() => {
+    const listener = (e) => onKeyDown(e)
+    window.addEventListener('keydown', listener)
+    return () => window.removeEventListener('keydown', listener)
   }, [])
 
   return (
@@ -62,6 +95,16 @@ function App() {
       <header className="app-header">
         <h1>simPle</h1>
         <div className="game-actions">
+          <label className="opponent">
+            B 플레이어
+            <select value={aiDepth} onChange={(e) => setAiDepth(Number(e.target.value))}>
+              {OPPONENTS.map(({ depth, name }) => (
+                <option key={depth} value={depth}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="toggle">
             <input
               type="checkbox"
@@ -79,9 +122,13 @@ function App() {
         </div>
       </header>
       <p className={`status status-p${game.winner ?? game.current}`}>
-        {over ? `${PLAYER_NAMES[game.winner]} 승리!` : `${PLAYER_NAMES[game.current]} 차례`}
+        {over
+          ? `${PLAYER_NAMES[game.winner]} 승리!`
+          : thinking
+            ? `${PLAYER_NAMES[game.current]} (AI) 생각하는 중…`
+            : `${PLAYER_NAMES[game.current]} 차례`}
       </p>
-      <PlayerPanel game={game} showPaths={showPaths} />
+      <PlayerPanel game={game} showPaths={showPaths} aiPlayer={aiDepth > 0 ? AI_PLAYER : null} />
       <Toolbar
         tool={tool}
         onToolChange={setTool}
@@ -90,7 +137,7 @@ function App() {
         inventory={game.players[game.current].inventory}
         canRemove={canRemove}
         player={game.current}
-        disabled={over}
+        disabled={locked}
       />
       <Board
         game={game}

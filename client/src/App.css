@@ -41,6 +41,24 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+.opponent {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.opponent select {
+  padding: 5px 8px;
+  border: 1.5px solid var(--groove);
+  border-radius: 8px;
+  background: var(--cell);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+.opponent select:hover {
+  border-color: var(--text-muted);
+}
 .toggle {
   display: inline-flex;
   align-items: center;
@@ -89,6 +107,14 @@
   background: var(--pc);
   color: var(--on-pawn);
   font-size: 13px;
+  font-weight: 700;
+}
+.player-ai {
+  padding: 0 6px;
+  border: 1px solid var(--pc);
+  border-radius: 6px;
+  color: var(--pc);
+  font-size: 12px;
   font-weight: 700;
 }
 .player-tag {
