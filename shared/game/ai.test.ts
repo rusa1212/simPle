@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { GameState, Pos } from './types.ts';
-import { applyAction, createGame } from './game.ts';
-import { chooseAction, evaluate, getLegalActions, WIN_SCORE } from './ai.ts';
+import type { Action, GameState, Pos } from './types.ts';
+import { applyAction, createGame, getPathLengths } from './game.ts';
+import { shortestPath } from './path.ts';
+import { buildBlockedEdges } from './walls.ts';
+import { chooseAction, evaluate, getCandidateActions, getLegalActions, WIN_SCORE } from './ai.ts';
 
 test('평가 함수: 시작 상태는 양쪽 모두 0점', () => {
   const s = createGame();
@@ -78,5 +80,47 @@ test('탐색: 상대가 다음 수에 이기면 막대로 막는다', () => {
   const after = applyAction(s, action);
   for (const reply of getLegalActions(after)) {
     assert.equal(applyAction(after, reply).winner, null);
+  }
+});
+
+// --- 막대 후보 좁히기 ---
+
+const actionKey = (a: Action) => JSON.stringify(a);
+
+test('최단 경로: 출발 칸부터 목표 줄까지 한 칸씩 이어진다', () => {
+  const s = applyAction(createGame(), { type: 'wall', kind: 'long', orientation: 'h', x: 3, y: 3 });
+  const path = shortestPath(9, buildBlockedEdges(s.walls), s.players[0].pos, s.players[0].goal)!;
+  assert.deepEqual(path[0], s.players[0].pos);
+  assert.equal(path.at(-1)!.y, 8);
+  assert.equal(path.length - 1, getPathLengths(s)[0]);
+  for (let i = 1; i < path.length; i++) {
+    assert.equal(Math.abs(path[i].x - path[i - 1].x) + Math.abs(path[i].y - path[i - 1].y), 1);
+  }
+});
+
+test('후보 수: 전체 수의 일부이고, 빠진 막대는 어느 쪽 경로 길이도 바꾸지 못한다', () => {
+  let s = createGame();
+  const states = [s];
+  for (const a of [
+    { type: 'wall', kind: 'normal', orientation: 'h', x: 3, y: 2 },
+    { type: 'move', to: { x: 4, y: 7 } },
+    { type: 'wall', kind: 'long', orientation: 'v', x: 4, y: 3 },
+    { type: 'wall', kind: 'temp', orientation: 'h', x: 1, y: 5 },
+  ] as Action[]) {
+    s = applyAction(s, a);
+    states.push(s);
+  }
+  for (const st of states) {
+    const legal = getLegalActions(st);
+    const candidates = getCandidateActions(st);
+    const candidateKeys = new Set(candidates.map(actionKey));
+    assert.ok(candidates.every((a) => legal.some((b) => actionKey(b) === actionKey(a))));
+    assert.ok(candidates.length < legal.length);
+    const before = getPathLengths(st);
+    for (const a of legal) {
+      if (candidateKeys.has(actionKey(a))) continue;
+      assert.equal(a.type, 'wall');
+      assert.deepEqual(getPathLengths(applyAction(st, a)).slice(), before, actionKey(a));
+    }
   }
 });
