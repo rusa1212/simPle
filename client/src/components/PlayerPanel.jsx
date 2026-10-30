@@ -8,7 +8,8 @@ const ITEMS = [
   { key: 'remover', name: '철거' },
 ]
 
-function PlayerPanel({ game, showPaths }) {
+/** aiPlayer: AI가 맡은 플레이어 번호, 사람끼리 두면 null */
+function PlayerPanel({ game, showPaths, aiPlayer }) {
   const paths = showPaths ? getPathLengths(game) : null
 
   return (
@@ -24,6 +25,7 @@ function PlayerPanel({ game, showPaths }) {
           >
             <header>
               <span className="player-badge">{PLAYER_NAMES[i]}</span>
+              {aiPlayer === i && <span className="player-ai">AI</span>}
               {active && <span className="player-tag">차례</span>}
               {won && <span className="player-tag">승리</span>}
               {paths && <span className="player-path">목표까지 {paths[i]}칸</span>}
