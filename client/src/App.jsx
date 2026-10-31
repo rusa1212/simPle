@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useState } from 'react'
-import { BASIC_VARIANT, FOG_ROUNDS, applyAction, createGame, getPawnMoves, variantConfig, viewFor } from '@game'
+import { BASIC_VARIANT, FOG_ROUNDS, applyAction, createGame, getPawnMoves, previousPlayer, variantConfig, viewFor } from '@game'
 import Board from './components/Board'
 import PlayerPanel from './components/PlayerPanel'
 import Toolbar from './components/Toolbar'
@@ -55,7 +55,7 @@ function App() {
   if (placing && previewError) hint = { text: previewError, error: true }
   else if (removing) hint = { text: '철거할 상대 막대를 클릭하세요 (Esc: 취소)', error: false }
   else if (game.lastBump) {
-    const bumped = PLAYER_NAMES[(game.current + playerCount - 1) % playerCount]
+    const bumped = PLAYER_NAMES[previousPlayer(game)]
     hint = { text: `${bumped}가 보이지 않는 막대에 막혀 차례를 넘겼습니다`, error: false }
   }
 
