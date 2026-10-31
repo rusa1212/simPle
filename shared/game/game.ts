@@ -1,4 +1,4 @@
-import type { Action, GameConfig, GameState, Orientation, Player, WallKind } from './types.ts';
+import type { Action, GameConfig, GameState, Orientation, Player, Wall, WallKind } from './types.ts';
 import { DEFAULT_CONFIG, WALL_LENGTH } from './config.ts';
 import { getPawnMoves } from './moves.ts';
 import { isAtGoal, shortestPathLength } from './path.ts';
@@ -16,7 +16,18 @@ export function createGame(config: Partial<GameConfig> = {}): GameState {
     { pos: { x: mid, y: 0 }, goal: { axis: 'y', value: last }, inventory: { ...cfg.inventory } },
     { pos: { x: mid, y: last }, goal: { axis: 'y', value: 0 }, inventory: { ...cfg.inventory } },
   ];
-  return { config: cfg, players, walls: [], current: 0, turn: 0, winner: null, nextWallId: 1 };
+  return { config: cfg, players, walls: [], current: 0, turn: 0, winner: null, nextWallId: 1, lastBump: null };
+}
+
+/** 안개 모드에서 player가 아직 볼 수 없는 막대인지 */
+export function isHiddenFrom(wall: Wall, player: number, turn: number): boolean {
+  return wall.owner !== player && wall.hiddenUntil !== null && turn < wall.hiddenUntil;
+}
+
+/** player에게 보이는 막대만 남긴 상태. 숨은 막대가 없으면 원래 상태를 그대로 돌려준다. */
+export function viewFor(state: GameState, player: number): GameState {
+  if (!state.walls.some((w) => isHiddenFrom(w, player, state.turn))) return state;
+  return { ...state, walls: state.walls.filter((w) => !isHiddenFrom(w, player, state.turn)) };
 }
 
 /** 각 플레이어의 목표 줄까지 최단 거리 (막대만 고려) */
@@ -45,8 +56,8 @@ function validateWall(
   return null;
 }
 
-/** 둘 수 있는 수면 null, 아니면 이유를 돌려준다. */
-export function validateAction(state: GameState, action: Action): string | null {
+/** 모든 막대를 아는 상태에서 실제로 둘 수 있는 수인지 */
+function checkAction(state: GameState, action: Action): string | null {
   if (state.winner !== null) return '게임이 끝났습니다';
   switch (action.type) {
     case 'move': {
@@ -67,10 +78,43 @@ export function validateAction(state: GameState, action: Action): string | null 
   }
 }
 
+/**
+ * 둘 수 있는 수면 null, 아니면 이유를 돌려준다.
+ * 현재 플레이어에게 보이는 막대만으로 판단하므로, 안개 모드에서는 보이지 않는 막대에 막히는 수도 허용된다.
+ */
+export function validateAction(state: GameState, action: Action): string | null {
+  return checkAction(viewFor(state, state.current), action);
+}
+
+/** 보이지 않는 막대에 막힌 수에서 드러낼 막대. 하나만 더해도 막히는 막대를 고르고, 없으면 숨은 막대 전부. */
+function findBlockers(state: GameState, action: Action): Wall[] {
+  const view = viewFor(state, state.current);
+  const hidden = state.walls.filter((w) => !view.walls.includes(w));
+  const blockers = hidden.filter((w) => checkAction({ ...view, walls: [...view.walls, w] }, action) !== null);
+  return blockers.length > 0 ? blockers : hidden;
+}
+
+/** 보이지 않는 막대에 막힌 수: 막은 막대가 드러나고, 아무것도 소모하지 않은 채 차례가 넘어간다. */
+function applyBump(state: GameState, action: Action): GameState {
+  const ids = findBlockers(state, action).map((w) => w.id);
+  const turn = state.turn + 1;
+  const walls = state.walls
+    .map((w) => (ids.includes(w.id) ? { ...w, hiddenUntil: null } : w))
+    .filter((w) => w.expiresAt === null || w.expiresAt > turn);
+  return {
+    ...state,
+    walls,
+    turn,
+    current: (state.current + 1) % state.players.length,
+    lastBump: ids,
+  };
+}
+
 /** 수를 적용한 새 상태를 돌려준다. 원래 상태는 바꾸지 않는다. */
 export function applyAction(state: GameState, action: Action): GameState {
   const reason = validateAction(state, action);
   if (reason) throw new Error(reason);
+  if (checkAction(state, action) !== null) return applyBump(state, action);
 
   const me = state.current;
   const players = state.players.map((p) => ({ ...p, inventory: { ...p.inventory } }));
@@ -94,6 +138,7 @@ export function applyAction(state: GameState, action: Action): GameState {
           length: WALL_LENGTH[action.kind],
           owner: me,
           expiresAt: action.kind === 'temp' ? state.turn + state.config.tempWallDuration : null,
+          hiddenUntil: state.config.fogDuration > 0 ? state.turn + state.config.fogDuration : null,
         },
       ];
       break;
@@ -114,6 +159,7 @@ export function applyAction(state: GameState, action: Action): GameState {
     turn,
     winner,
     nextWallId,
+    lastBump: null,
     current: winner === null ? (me + 1) % players.length : me,
   };
 }
