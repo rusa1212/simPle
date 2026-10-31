@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useState } from 'react'
-import { BASIC_VARIANT, applyAction, createGame, getPawnMoves, variantConfig } from '@game'
+import { BASIC_VARIANT, FOG_DURATION, applyAction, createGame, getPawnMoves, variantConfig, viewFor } from '@game'
 import Board from './components/Board'
 import PlayerPanel from './components/PlayerPanel'
 import Toolbar from './components/Toolbar'
@@ -39,14 +39,21 @@ function App() {
   const thinking = isAiTurn(game)
   // AI가 생각하는 동안은 사람이 둘 수 없다
   const locked = over || thinking
+  // 안개 모드에서 화면에 보여 줄 시점. AI 상대면 늘 사람 쪽, 사람끼리면 지금 둘 차례인 쪽. 게임이 끝나면 전부 공개한다.
+  const viewer = aiDepth > 0 ? 1 - AI_PLAYER : game.current
+  const view = over ? game : viewFor(game, viewer)
   const placing = WALL_KINDS.includes(tool) && !locked
   const removing = tool === 'remover' && !locked
-  const moves = !locked && tool === 'move' ? getPawnMoves(game, game.current) : []
-  const canRemove = game.walls.some((w) => w.owner !== game.current)
+  const moves = !locked && tool === 'move' ? getPawnMoves(view, game.current) : []
+  const canRemove = view.walls.some((w) => w.owner !== game.current)
 
   let hint = null
   if (placing && previewError) hint = { text: previewError, error: true }
   else if (removing) hint = { text: '철거할 상대 막대를 클릭하세요 (Esc: 취소)', error: false }
+  else if (game.lastBump) {
+    const bumped = PLAYER_NAMES[(game.current + 1) % PLAYER_NAMES.length]
+    hint = { text: `${bumped}가 보이지 않는 막대에 막혀 차례를 넘겼습니다`, error: false }
+  }
 
   const play = (action) => {
     setHistory((h) => [...h, applyAction(h.at(-1), action)])
@@ -79,7 +86,8 @@ function App() {
       if (e.data) play(e.data)
       worker.terminate()
     }
-    worker.postMessage({ state: game, depth: aiDepth })
+    // AI도 자기에게 보이는 막대만 알고 수를 고른다
+    worker.postMessage({ state: viewFor(game, AI_PLAYER), depth: aiDepth })
     return () => worker.terminate()
   }, [game, thinking, aiDepth])
 
@@ -147,6 +155,14 @@ function App() {
             ))}
           </select>
         </label>
+        <label className="toggle" title={`상대가 새로 놓은 막대가 ${FOG_DURATION}수 동안 보이지 않습니다`}>
+          <input
+            type="checkbox"
+            checked={variant.fog}
+            onChange={(e) => changeVariant({ ...variant, fog: e.target.checked })}
+          />
+          안개 모드
+        </label>
       </fieldset>
       <p className={`status status-p${game.winner ?? game.current}`}>
         {over
@@ -155,7 +171,7 @@ function App() {
             ? `${PLAYER_NAMES[game.current]} (AI) 생각하는 중…`
             : `${PLAYER_NAMES[game.current]} 차례`}
       </p>
-      <PlayerPanel game={game} showPaths={showPaths} aiPlayer={aiDepth > 0 ? AI_PLAYER : null} />
+      <PlayerPanel game={view} showPaths={showPaths} aiPlayer={aiDepth > 0 ? AI_PLAYER : null} />
       <Toolbar
         tool={tool}
         onToolChange={setTool}
@@ -167,7 +183,7 @@ function App() {
         disabled={locked}
       />
       <Board
-        game={game}
+        game={view}
         moves={moves}
         onMove={(to) => play({ type: 'move', to })}
         wallTool={placing ? { kind: tool, orientation } : null}

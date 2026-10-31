@@ -326,6 +326,25 @@
 }
 
 /* 철거 모드: 상대 막대만 고를 수 있다 */
+.wall.fogged .wall-body {
+  opacity: 0.55;
+  filter: blur(1.2px);
+}
+.wall.bumped .wall-body {
+  stroke: var(--danger);
+  stroke-width: 2;
+  animation: wall-bump 0.4s ease-in-out 2;
+}
+@keyframes wall-bump {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wall.bumped .wall-body {
+    animation: none;
+  }
+}
 .wall-hit {
   fill: transparent;
 }
