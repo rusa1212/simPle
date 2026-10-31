@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useState } from 'react'
-import { applyAction, createGame, getPawnMoves } from '@game'
+import { BASIC_VARIANT, applyAction, createGame, getPawnMoves, variantConfig } from '@game'
 import Board from './components/Board'
 import PlayerPanel from './components/PlayerPanel'
 import Toolbar from './components/Toolbar'
@@ -14,10 +14,17 @@ const OPPONENTS = [
   { depth: 2, name: 'AI (보통)' },
   { depth: 3, name: 'AI (어려움)' },
 ]
+const BOARD_SIZES = [
+  { size: 7, name: '7×7 빠른 대전' },
+  { size: 9, name: '9×9 기본' },
+  { size: 11, name: '11×11 장기전' },
+]
 
 function App() {
   // 지금까지의 모든 상태. 마지막이 현재 상태이고, 무르기는 마지막을 빼는 것이다.
   const [history, setHistory] = useState(() => [createGame()])
+  // 확장 규칙. 바꾸면 새 게임을 시작한다.
+  const [variant, setVariant] = useState(BASIC_VARIANT)
   const [tool, setTool] = useState('move')
   const [orientation, setOrientation] = useState('h')
   const [previewError, setPreviewError] = useState(null)
@@ -55,9 +62,13 @@ function App() {
     setTool('move')
   }
   // 새 게임도 기록에 쌓아서, 실수로 눌렀을 때 무르기로 되돌릴 수 있게 한다
-  const newGame = () => {
-    setHistory((h) => [...h, createGame()])
+  const newGame = (v = variant) => {
+    setHistory((h) => [...h, createGame(variantConfig(v))])
     setTool('move')
+  }
+  const changeVariant = (v) => {
+    setVariant(v)
+    newGame(v)
   }
 
   // AI 차례가 되면 Worker에서 수를 계산해 둔다. 그 사이 무르기나 새 게임으로 상태가 바뀌면 계산을 버린다.
@@ -116,11 +127,27 @@ function App() {
           <button type="button" onClick={undo} disabled={!canUndo} title="Ctrl+Z">
             무르기
           </button>
-          <button type="button" onClick={newGame}>
+          <button type="button" onClick={() => newGame()}>
             새 게임
           </button>
         </div>
       </header>
+      <fieldset className="variant">
+        <legend>확장 규칙</legend>
+        <label>
+          보드 크기
+          <select
+            value={variant.size}
+            onChange={(e) => changeVariant({ ...variant, size: Number(e.target.value) })}
+          >
+            {BOARD_SIZES.map(({ size, name }) => (
+              <option key={size} value={size}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </fieldset>
       <p className={`status status-p${game.winner ?? game.current}`}>
         {over
           ? `${PLAYER_NAMES[game.winner]} 승리!`

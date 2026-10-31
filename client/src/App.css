@@ -59,6 +59,39 @@
 .opponent select:hover {
   border-color: var(--text-muted);
 }
+.variant {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 6px 12px 8px;
+  border: 1.5px dashed var(--groove);
+  border-radius: 10px;
+  font-size: 14px;
+}
+.variant legend {
+  padding: 0 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.variant label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.variant select {
+  padding: 5px 8px;
+  border: 1.5px solid var(--groove);
+  border-radius: 8px;
+  background: var(--cell);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+.variant select:hover {
+  border-color: var(--text-muted);
+}
 .toggle {
   display: inline-flex;
   align-items: center;
