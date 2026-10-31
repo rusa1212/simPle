@@ -4,6 +4,24 @@ import { getPawnMoves } from './moves.ts';
 import { isAtGoal, shortestPathLength } from './path.ts';
 import { buildBlockedEdges, isWallInBounds, wallsConflict } from './walls.ts';
 
+/** 차례 순서. 4인은 A가 아래에 오도록 보드를 봤을 때 시계 방향이다: A(아래) → C(왼쪽) → B(위) → D(오른쪽) */
+const TURN_ORDER: Record<number, number[]> = { 2: [0, 1], 4: [0, 2, 1, 3] };
+
+function seatAfter(state: GameState, player: number, step: number): number {
+  const order = TURN_ORDER[state.players.length];
+  return order[(order.indexOf(player) + step + order.length) % order.length];
+}
+
+/** player 다음에 둘 플레이어 */
+export function nextPlayer(state: GameState, player = state.current): number {
+  return seatAfter(state, player, 1);
+}
+
+/** player 바로 앞에 둔 플레이어 */
+export function previousPlayer(state: GameState, player = state.current): number {
+  return seatAfter(state, player, -1);
+}
+
 export function createGame(config: Partial<GameConfig> = {}): GameState {
   const cfg: GameConfig = {
     ...DEFAULT_CONFIG,
@@ -12,7 +30,7 @@ export function createGame(config: Partial<GameConfig> = {}): GameState {
   };
   const mid = Math.floor(cfg.size / 2);
   const last = cfg.size - 1;
-  // 각자 한 변의 가운데에서 출발해 반대편 변으로 간다. 차례는 A → B → C → D 순서다.
+  // 각자 한 변의 가운데에서 출발해 반대편 변으로 간다. 2인 게임과 번호를 맞추려고 B를 위쪽에 둔다.
   const starts: Omit<Player, 'inventory'>[] = [
     { pos: { x: mid, y: 0 }, goal: { axis: 'y', value: last } },
     { pos: { x: mid, y: last }, goal: { axis: 'y', value: 0 } },
@@ -111,7 +129,7 @@ function applyBump(state: GameState, action: Action): GameState {
     ...state,
     walls,
     turn,
-    current: (state.current + 1) % state.players.length,
+    current: nextPlayer(state),
     lastBump: ids,
   };
 }
@@ -166,6 +184,6 @@ export function applyAction(state: GameState, action: Action): GameState {
     winner,
     nextWallId,
     lastBump: null,
-    current: winner === null ? (me + 1) % players.length : me,
+    current: winner === null ? nextPlayer(state) : me,
   };
 }

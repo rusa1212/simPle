@@ -154,8 +154,15 @@ test('4인: 네 변의 가운데에서 출발해 반대편 변이 목표다', ()
   assert.deepEqual(getPathLengths(game), [8, 8, 8, 8]);
 });
 
-test('4인: 차례는 A → B → C → D → A 순서로 돈다', () => {
-  const game = play(fourGame(), step(4, 1), step(4, 7), step(1, 4), step(7, 4));
+test('4인: 차례는 시계 방향으로 A(아래) → C(왼쪽) → B(위) → D(오른쪽) → A 순서로 돈다', () => {
+  const moves = [step(4, 1), step(1, 4), step(4, 7), step(7, 4)];
+  const order: number[] = [];
+  let game = fourGame();
+  for (const move of moves) {
+    order.push(game.current);
+    game = applyAction(game, move);
+  }
+  assert.deepEqual(order, [0, 2, 1, 3]);
   assert.equal(game.current, 0);
   assert.equal(game.turn, 4);
 });
