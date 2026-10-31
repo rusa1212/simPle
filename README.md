@@ -17,7 +17,6 @@
 | 임시 막대 | 2칸 | 2 | 6수(양쪽 합산)가 지나면 사라짐 |
 | 철거 도구 | - | 1 | 상대가 설치한 막대 1개 제거 |
 
-자세한 규칙은 [docs/rules.md](docs/rules.md), 기획과 개발 순서는 [docs/game-design.md](docs/game-design.md)에 있다.
 
 ## 기능
 
@@ -39,13 +38,10 @@
 
 ### 준비
 
-- Node.js 24 이상. `shared/`의 TypeScript를 빌드 없이 Node에서 바로 실행하기 때문이다.
-
 ```bash
 npm run install:all
 ```
 
-루트, `client/`, `server/`의 의존성을 한 번에 설치한다.
 
 ### 개발 서버
 
@@ -53,24 +49,6 @@ npm run install:all
 npm run dev
 ```
 
-게임 서버(http://localhost:4000)와 클라이언트(http://localhost:5173)를 함께 띄운다.
-브라우저에서 http://localhost:5173 을 열면 된다. 서버 포트는 `server/.env`의 `PORT`로 바꿀 수 있다 (`server/.env.example` 참고).
-
-### 테스트와 검사
-
-```bash
-npm test           # 게임 로직과 AI 단위 테스트 (node:test)
-npm run typecheck  # shared/ 타입 검사
-npm run lint --prefix client
-```
-
-### 빌드
-
-```bash
-npm run build      # client/dist 에 정적 파일 생성
-```
-
-아직 서버가 빌드 결과를 제공하지 않으므로, 배포 전에는 `npm run preview --prefix client`로 빌드 결과를 확인한다.
 
 ## 폴더 구조
 
@@ -85,11 +63,3 @@ client/        React + Vite + SVG 화면
 server/        Express 서버 (온라인 대전 예정)
 docs/          기획서와 규칙
 ```
-
-## 진행 상황
-
-- [x] 세그먼트 1: 게임 로직 모듈 + 테스트
-- [x] 세그먼트 2: 로컬 2인 UI
-- [x] 세그먼트 3: AI 상대
-- [ ] 세그먼트 4: 온라인 대전 (Socket.IO, 방 코드)
-- [ ] 세그먼트 5: 확장 규칙 (보드 크기, 안개 모드, 4인 모드, 기보 저장)
