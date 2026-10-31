@@ -1,6 +1,6 @@
 import { getPathLengths } from '@game'
 
-const PLAYER_NAMES = ['A', 'B']
+const PLAYER_NAMES = ['A', 'B', 'C', 'D']
 const ITEMS = [
   { key: 'normal', name: '일반' },
   { key: 'long', name: '긴' },
@@ -8,12 +8,12 @@ const ITEMS = [
   { key: 'remover', name: '철거' },
 ]
 
-/** aiPlayer: AI가 맡은 플레이어 번호, 사람끼리 두면 null */
-function PlayerPanel({ game, showPaths, aiPlayer }) {
+/** isAi: 플레이어 번호를 받아 AI가 맡았는지 돌려준다 */
+function PlayerPanel({ game, showPaths, isAi }) {
   const paths = showPaths ? getPathLengths(game) : null
 
   return (
-    <div className="players">
+    <div className={`players players-${game.players.length}`}>
       {game.players.map((player, i) => {
         const active = game.winner === null && game.current === i
         const won = game.winner === i
@@ -25,7 +25,7 @@ function PlayerPanel({ game, showPaths, aiPlayer }) {
           >
             <header>
               <span className="player-badge">{PLAYER_NAMES[i]}</span>
-              {aiPlayer === i && <span className="player-ai">AI</span>}
+              {isAi(i) && <span className="player-ai">AI</span>}
               {active && <span className="player-tag">차례</span>}
               {won && <span className="player-tag">승리</span>}
               {paths && <span className="player-path">목표까지 {paths[i]}칸</span>}

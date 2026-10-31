@@ -12,7 +12,7 @@ import {
   wallRect,
 } from './boardGeometry'
 
-const PLAYER_NAMES = ['A', 'B']
+const PLAYER_NAMES = ['A', 'B', 'C', 'D']
 
 /**
  * wallTool이 있으면 막대 설치 모드: 마우스 위치에 미리보기를 띄우고 클릭하면 onPlaceWall을 부른다.

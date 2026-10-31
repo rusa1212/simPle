@@ -114,6 +114,15 @@
 .player-p1 {
   --pc: var(--p1);
 }
+.player-p2 {
+  --pc: var(--p2);
+}
+.player-p3 {
+  --pc: var(--p3);
+}
+.players-4 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
 .player {
   padding: 10px 12px;
   border: 1.5px solid var(--groove);
@@ -186,6 +195,12 @@
 .status-p1 {
   color: var(--p1);
 }
+.status-p2 {
+  color: var(--p2);
+}
+.status-p3 {
+  color: var(--p3);
+}
 
 /* --- 도구 --- */
 
@@ -194,6 +209,12 @@
 }
 .toolbar-p1 {
   --accent: var(--p1);
+}
+.toolbar-p2 {
+  --accent: var(--p2);
+}
+.toolbar-p3 {
+  --accent: var(--p3);
 }
 .toolbar {
   display: flex;
@@ -289,6 +310,12 @@
 .cell.goal-p1 {
   fill: color-mix(in srgb, var(--p1) 16%, var(--cell));
 }
+.cell.goal-p2 {
+  fill: color-mix(in srgb, var(--p2) 16%, var(--cell));
+}
+.cell.goal-p3 {
+  fill: color-mix(in srgb, var(--p3) 16%, var(--cell));
+}
 
 .labels text {
   fill: var(--text-muted);
@@ -302,6 +329,12 @@
 }
 .wall-p1 {
   --wall: var(--p1);
+}
+.wall-p2 {
+  --wall: var(--p2);
+}
+.wall-p3 {
+  --wall: var(--p3);
 }
 .wall-body {
   fill: var(--wall);
@@ -372,6 +405,12 @@
 .pawn-p1 circle {
   fill: var(--p1);
 }
+.pawn-p2 circle {
+  fill: var(--p2);
+}
+.pawn-p3 circle {
+  fill: var(--p3);
+}
 .board.placing {
   cursor: crosshair;
 }
@@ -384,6 +423,12 @@
 }
 .wall-preview.valid.wall-preview-p1 {
   fill: var(--p1);
+}
+.wall-preview.valid.wall-preview-p2 {
+  fill: var(--p2);
+}
+.wall-preview.valid.wall-preview-p3 {
+  fill: var(--p3);
 }
 .wall-preview.valid {
   fill-opacity: 0.5;
@@ -403,6 +448,12 @@
 .pawn-p1 .pawn-ring {
   stroke: var(--p1);
 }
+.pawn-p2 .pawn-ring {
+  stroke: var(--p2);
+}
+.pawn-p3 .pawn-ring {
+  stroke: var(--p3);
+}
 
 /* --- 이동 가능한 칸 --- */
 
@@ -411,6 +462,12 @@
 }
 .move-p1 {
   --move: var(--p1);
+}
+.move-p2 {
+  --move: var(--p2);
+}
+.move-p3 {
+  --move: var(--p3);
 }
 .move-target {
   cursor: pointer;

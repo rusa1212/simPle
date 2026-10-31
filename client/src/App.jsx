@@ -1,18 +1,20 @@
 import { useEffect, useEffectEvent, useState } from 'react'
-import { BASIC_VARIANT, FOG_DURATION, applyAction, createGame, getPawnMoves, variantConfig, viewFor } from '@game'
+import { BASIC_VARIANT, FOG_ROUNDS, applyAction, createGame, getPawnMoves, variantConfig, viewFor } from '@game'
 import Board from './components/Board'
 import PlayerPanel from './components/PlayerPanel'
 import Toolbar from './components/Toolbar'
 import './App.css'
 
-const PLAYER_NAMES = ['A', 'B']
+const PLAYER_NAMES = ['A', 'B', 'C', 'D']
 const WALL_KINDS = ['normal', 'long', 'temp']
-// AI 상대는 B(나중에 두는 쪽)를 맡는다
-const AI_PLAYER = 1
-const OPPONENTS = [
-  { depth: 0, name: '사람' },
-  { depth: 2, name: 'AI (보통)' },
-  { depth: 3, name: 'AI (어려움)' },
+// AI 상대가 있으면 사람은 A를, AI는 나머지를 모두 맡는다
+const HUMAN_PLAYER = 0
+const OPPONENTS = ['사람', 'AI (보통)', 'AI (어려움)']
+// 난이도별 탐색 깊이. 4인은 후보 수가 많아서 한 단계씩 얕게 본다.
+const AI_DEPTHS = { 2: [0, 2, 3], 4: [0, 1, 2] }
+const PLAYER_COUNTS = [
+  { players: 2, name: '2인' },
+  { players: 4, name: '4인' },
 ]
 const BOARD_SIZES = [
   { size: 7, name: '7×7 빠른 대전' },
@@ -29,18 +31,20 @@ function App() {
   const [orientation, setOrientation] = useState('h')
   const [previewError, setPreviewError] = useState(null)
   const [showPaths, setShowPaths] = useState(false)
-  // 0이면 사람 대 사람, 아니면 AI 탐색 깊이
-  const [aiDepth, setAiDepth] = useState(0)
+  // OPPONENTS의 번호. 0이면 사람끼리 둔다.
+  const [aiLevel, setAiLevel] = useState(0)
 
   const game = history.at(-1)
   const canUndo = history.length > 1
   const over = game.winner !== null
-  const isAiTurn = (s) => aiDepth > 0 && s.winner === null && s.current === AI_PLAYER
+  const playerCount = game.players.length
+  const aiDepth = AI_DEPTHS[playerCount][aiLevel]
+  const isAiTurn = (s) => aiLevel > 0 && s.winner === null && s.current !== HUMAN_PLAYER
   const thinking = isAiTurn(game)
   // AI가 생각하는 동안은 사람이 둘 수 없다
   const locked = over || thinking
   // 안개 모드에서 화면에 보여 줄 시점. AI 상대면 늘 사람 쪽, 사람끼리면 지금 둘 차례인 쪽. 게임이 끝나면 전부 공개한다.
-  const viewer = aiDepth > 0 ? 1 - AI_PLAYER : game.current
+  const viewer = aiLevel > 0 ? HUMAN_PLAYER : game.current
   const view = over ? game : viewFor(game, viewer)
   const placing = WALL_KINDS.includes(tool) && !locked
   const removing = tool === 'remover' && !locked
@@ -51,7 +55,7 @@ function App() {
   if (placing && previewError) hint = { text: previewError, error: true }
   else if (removing) hint = { text: '철거할 상대 막대를 클릭하세요 (Esc: 취소)', error: false }
   else if (game.lastBump) {
-    const bumped = PLAYER_NAMES[(game.current + 1) % PLAYER_NAMES.length]
+    const bumped = PLAYER_NAMES[(game.current + playerCount - 1) % playerCount]
     hint = { text: `${bumped}가 보이지 않는 막대에 막혀 차례를 넘겼습니다`, error: false }
   }
 
@@ -87,7 +91,7 @@ function App() {
       worker.terminate()
     }
     // AI도 자기에게 보이는 막대만 알고 수를 고른다
-    worker.postMessage({ state: viewFor(game, AI_PLAYER), depth: aiDepth })
+    worker.postMessage({ state: viewFor(game, game.current), depth: aiDepth })
     return () => worker.terminate()
   }, [game, thinking, aiDepth])
 
@@ -115,10 +119,10 @@ function App() {
         <h1>simPle</h1>
         <div className="game-actions">
           <label className="opponent">
-            B 플레이어
-            <select value={aiDepth} onChange={(e) => setAiDepth(Number(e.target.value))}>
-              {OPPONENTS.map(({ depth, name }) => (
-                <option key={depth} value={depth}>
+            {PLAYER_NAMES.slice(1, playerCount).join('·')} 플레이어
+            <select value={aiLevel} onChange={(e) => setAiLevel(Number(e.target.value))}>
+              {OPPONENTS.map((name, level) => (
+                <option key={level} value={level}>
                   {name}
                 </option>
               ))}
@@ -143,6 +147,19 @@ function App() {
       <fieldset className="variant">
         <legend>확장 규칙</legend>
         <label>
+          인원
+          <select
+            value={variant.players}
+            onChange={(e) => changeVariant({ ...variant, players: Number(e.target.value) })}
+          >
+            {PLAYER_COUNTS.map(({ players, name }) => (
+              <option key={players} value={players}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           보드 크기
           <select
             value={variant.size}
@@ -155,7 +172,7 @@ function App() {
             ))}
           </select>
         </label>
-        <label className="toggle" title={`상대가 새로 놓은 막대가 ${FOG_DURATION}수 동안 보이지 않습니다`}>
+        <label className="toggle" title={`새로 놓인 막대는 다른 플레이어의 다음 ${FOG_ROUNDS}차례 동안 보이지 않습니다`}>
           <input
             type="checkbox"
             checked={variant.fog}
@@ -171,7 +188,7 @@ function App() {
             ? `${PLAYER_NAMES[game.current]} (AI) 생각하는 중…`
             : `${PLAYER_NAMES[game.current]} 차례`}
       </p>
-      <PlayerPanel game={view} showPaths={showPaths} aiPlayer={aiDepth > 0 ? AI_PLAYER : null} />
+      <PlayerPanel game={view} showPaths={showPaths} isAi={(i) => aiLevel > 0 && i !== HUMAN_PLAYER} />
       <Toolbar
         tool={tool}
         onToolChange={setTool}
