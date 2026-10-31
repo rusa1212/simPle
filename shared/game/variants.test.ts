@@ -1,11 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyAction, createGame, getPathLengths, validateAction, viewFor } from './game.ts';
+import { getPawnMoves } from './moves.ts';
 import { chooseAction } from './ai.ts';
 import { DEFAULT_CONFIG } from './config.ts';
-import { BASIC_VARIANT, BOARD_PRESETS, variantConfig } from './variants.ts';
+import { BASIC_VARIANT, BOARD_PRESETS, FOUR_PLAYER_INVENTORY, variantConfig } from './variants.ts';
 import type { BoardSize } from './variants.ts';
-import type { Action, GameState } from './types.ts';
+import type { Action, GameState, Pos, Wall } from './types.ts';
 
 test('기본 확장 규칙은 기본 게임과 같다', () => {
   assert.deepEqual(createGame(variantConfig(BASIC_VARIANT)), createGame());
@@ -117,4 +118,87 @@ test('안개: AI는 자기에게 보이는 상태로 수를 골라도 실제 게
   const action = chooseAction(viewFor(game, 1), 2);
   assert.ok(action);
   assert.doesNotThrow(() => applyAction(game, action));
+});
+
+// 4인 모드 (9×9)
+const fourGame = () => createGame(variantConfig({ ...BASIC_VARIANT, players: 4 }));
+
+function withPositions(state: GameState, ...positions: Pos[]): GameState {
+  return { ...state, players: state.players.map((p, i) => ({ ...p, pos: positions[i] })) };
+}
+
+const vWall = (x: number, y: number, length: number, owner: number, id: number): Wall => ({
+  id,
+  kind: length === 3 ? 'long' : 'normal',
+  orientation: 'v',
+  x,
+  y,
+  length,
+  owner,
+  expiresAt: null,
+  hiddenUntil: null,
+});
+
+test('4인: 네 변의 가운데에서 출발해 반대편 변이 목표다', () => {
+  const game = fourGame();
+  assert.deepEqual(
+    game.players.map((p) => [p.pos, p.goal]),
+    [
+      [{ x: 4, y: 0 }, { axis: 'y', value: 8 }],
+      [{ x: 4, y: 8 }, { axis: 'y', value: 0 }],
+      [{ x: 0, y: 4 }, { axis: 'x', value: 8 }],
+      [{ x: 8, y: 4 }, { axis: 'x', value: 0 }],
+    ],
+  );
+  assert.deepEqual(game.players[2].inventory, FOUR_PLAYER_INVENTORY[9]);
+  assert.deepEqual(getPathLengths(game), [8, 8, 8, 8]);
+});
+
+test('4인: 차례는 A → B → C → D → A 순서로 돈다', () => {
+  const game = play(fourGame(), step(4, 1), step(4, 7), step(1, 4), step(7, 4));
+  assert.equal(game.current, 0);
+  assert.equal(game.turn, 4);
+});
+
+test('4인: 오른쪽 변에 도착한 C가 이긴다', () => {
+  let game = withPositions(fourGame(), { x: 4, y: 0 }, { x: 4, y: 8 }, { x: 7, y: 2 }, { x: 8, y: 4 });
+  game = { ...game, current: 2 };
+  const after = applyAction(game, step(8, 2));
+  assert.equal(after.winner, 2);
+});
+
+test('4인: 가로로 가는 C의 길을 완전히 막는 막대도 놓을 수 없다', () => {
+  // C(0,4)의 오른쪽 홈을 아래부터 막아 맨 위 한 줄만 남겨 둔다
+  const game = { ...fourGame(), walls: [vWall(0, 0, 2, 1, 1), vWall(0, 2, 2, 1, 2), vWall(0, 4, 2, 1, 3)] };
+  const seal: Action = { type: 'wall', kind: 'long', orientation: 'v', x: 0, y: 6 };
+  assert.equal(validateAction(game, seal), '목표 줄로 가는 길을 완전히 막을 수 없습니다');
+});
+
+test('4인: 뛰어넘을 칸에도 말이 있으면 대각선으로 비켜 간다', () => {
+  const game = withPositions(fourGame(), { x: 4, y: 4 }, { x: 4, y: 5 }, { x: 4, y: 6 }, { x: 8, y: 4 });
+  const moves = getPawnMoves(game, 0).map((p) => `${p.x},${p.y}`).sort();
+  assert.deepEqual(moves, ['3,4', '3,5', '4,3', '5,4', '5,5']);
+});
+
+test('4인: 철거 도구는 다른 세 플레이어의 막대 모두에 쓸 수 있다', () => {
+  const game = { ...fourGame(), walls: [vWall(2, 0, 2, 0, 1), vWall(4, 0, 2, 3, 2)] };
+  assert.equal(validateAction(game, { type: 'remove', wallId: 1 }), '상대 막대만 철거할 수 있습니다');
+  assert.equal(validateAction(game, { type: 'remove', wallId: 2 }), null);
+});
+
+test('4인: 임시 막대와 안개 시간은 각자의 차례 기준으로 2인과 같다', () => {
+  const config = variantConfig({ ...BASIC_VARIANT, players: 4, fog: true });
+  assert.equal(config.tempWallDuration, 12);
+  assert.equal(config.fogDuration, 8);
+  assert.equal(variantConfig({ ...BASIC_VARIANT, fog: true }).fogDuration, 4);
+});
+
+test('4인: AI가 수를 고른다', () => {
+  const game = play(fourGame(), step(4, 1));
+  // 4인은 후보 수가 많아서 화면에서는 깊이 1~2만 쓴다
+  for (const depth of [1, 2]) {
+    const action = chooseAction(game, depth);
+    assert.ok(action);
+    assert.equal(validateAction(game, action), null);
+  }
 });

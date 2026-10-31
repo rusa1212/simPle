@@ -12,10 +12,16 @@ export function createGame(config: Partial<GameConfig> = {}): GameState {
   };
   const mid = Math.floor(cfg.size / 2);
   const last = cfg.size - 1;
-  const players: Player[] = [
-    { pos: { x: mid, y: 0 }, goal: { axis: 'y', value: last }, inventory: { ...cfg.inventory } },
-    { pos: { x: mid, y: last }, goal: { axis: 'y', value: 0 }, inventory: { ...cfg.inventory } },
+  // 각자 한 변의 가운데에서 출발해 반대편 변으로 간다. 차례는 A → B → C → D 순서다.
+  const starts: Omit<Player, 'inventory'>[] = [
+    { pos: { x: mid, y: 0 }, goal: { axis: 'y', value: last } },
+    { pos: { x: mid, y: last }, goal: { axis: 'y', value: 0 } },
+    { pos: { x: 0, y: mid }, goal: { axis: 'x', value: last } },
+    { pos: { x: last, y: mid }, goal: { axis: 'x', value: 0 } },
   ];
+  const players: Player[] = starts
+    .slice(0, cfg.playerCount)
+    .map((p) => ({ ...p, inventory: { ...cfg.inventory } }));
   return { config: cfg, players, walls: [], current: 0, turn: 0, winner: null, nextWallId: 1, lastBump: null };
 }
 

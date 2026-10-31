@@ -44,6 +44,8 @@ export interface Player {
 
 export interface GameConfig {
   size: number;
+  /** 2인: A(아래)↔B(위). 4인: C(왼쪽)↔D(오른쪽)가 더해진다. */
+  playerCount: 2 | 4;
   inventory: Inventory;
   /** 임시 막대가 유지되는 수(양쪽 플레이어 합산) */
   tempWallDuration: number;
