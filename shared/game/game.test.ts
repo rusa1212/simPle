@@ -28,6 +28,7 @@ const wall = (orientation: 'h' | 'v', x: number, y: number, owner = 1): Omit<Wal
   length: 2,
   owner,
   expiresAt: null,
+  hiddenUntil: null,
 });
 
 test('시작 위치와 목표 줄', () => {

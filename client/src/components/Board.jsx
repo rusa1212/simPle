@@ -12,7 +12,7 @@ import {
   wallRect,
 } from './boardGeometry'
 
-const PLAYER_NAMES = ['A', 'B']
+const PLAYER_NAMES = ['A', 'B', 'C', 'D']
 
 /**
  * wallTool이 있으면 막대 설치 모드: 마우스 위치에 미리보기를 띄우고 클릭하면 onPlaceWall을 부른다.
@@ -126,11 +126,14 @@ function Board({
           const rect = wallRect(size, wall)
           const removable = removing && wall.owner !== game.current
           const remaining = wall.expiresAt === null ? null : wall.expiresAt - game.turn
+          // 안개 모드에서 아직 상대에게 보이지 않는 내 막대
+          const fogged = wall.hiddenUntil !== null && wall.hiddenUntil > game.turn
+          const bumped = game.lastBump?.includes(wall.id)
           const remove = () => onRemoveWall?.(wall.id)
           return (
             <g
               key={wall.id}
-              className={`wall wall-p${wall.owner} wall-${wall.kind}${removable ? ' removable' : ''}`}
+              className={`wall wall-p${wall.owner} wall-${wall.kind}${removable ? ' removable' : ''}${fogged ? ' fogged' : ''}${bumped ? ' bumped' : ''}`}
               {...(removable && {
                 role: 'button',
                 tabIndex: 0,
@@ -154,7 +157,9 @@ function Board({
                   height={rect.height + 12}
                 />
               )}
-              <rect className="wall-body" {...rect} rx={3} />
+              <rect className="wall-body" {...rect} rx={3}>
+                {fogged && <title>{`상대에게 ${wall.hiddenUntil - game.turn}수 동안 보이지 않음`}</title>}
+              </rect>
               {remaining !== null && (
                 <g className="wall-timer">
                   <title>{`${remaining}수 뒤 사라짐`}</title>

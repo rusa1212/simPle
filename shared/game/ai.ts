@@ -11,13 +11,15 @@ export const WIN_SCORE = 10000;
 const WALL_KINDS: readonly WallKind[] = ['normal', 'long', 'temp'];
 const ORIENTATIONS: readonly Orientation[] = ['h', 'v'];
 
-/** player 입장에서 본 점수: 상대 최단 경로 길이 − 내 최단 경로 길이. 클수록 유리하다. */
+/**
+ * player 입장에서 본 점수: 가장 앞선 상대의 최단 경로 길이 − 내 최단 경로 길이. 클수록 유리하다.
+ * 4인에서는 상대 셋이 모두 나를 견제한다고 보고(미니맥스에서 상대 차례는 모두 최소화) 가장 위험한 상대만 본다.
+ */
 export function evaluate(state: GameState, player: number): number {
   if (state.winner !== null) return state.winner === player ? WIN_SCORE : -WIN_SCORE;
-  const lengths = getPathLengths(state);
-  const mine = lengths[player]!;
-  const opponent = lengths[(player + 1) % state.players.length]!;
-  return opponent - mine;
+  const lengths = getPathLengths(state) as number[];
+  const opponent = Math.min(...lengths.filter((_, i) => i !== player));
+  return opponent - lengths[player];
 }
 
 /** 현재 플레이어가 둘 수 있는 모든 수. 말 이동을 먼저 둬서 가지치기가 잘 되게 한다. */

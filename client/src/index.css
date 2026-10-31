@@ -10,6 +10,8 @@
 
   --p0: #2f6fd6;
   --p1: #d4572a;
+  --p2: #2b9a5a;
+  --p3: #8a4fd0;
   --danger: #d4202a;
   --on-pawn: #ffffff;
 
@@ -35,6 +37,8 @@
 
     --p0: #6aa0ff;
     --p1: #ff8a5c;
+    --p2: #5bd08e;
+    --p3: #b98cff;
     --danger: #ff5c63;
     --on-pawn: #17181c;
   }
