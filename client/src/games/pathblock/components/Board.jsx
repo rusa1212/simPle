@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { WALL_LENGTH, validateAction } from '@game'
+import { WALL_LENGTH, validateAction } from '@pathblock'
 import {
   CELL,
   LABEL,

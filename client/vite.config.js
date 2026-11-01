@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@game': `${sharedDir}/game/index.ts`,
+      '@pathblock': `${sharedDir}/pathblock/index.ts`,
     },
   },
   server: {

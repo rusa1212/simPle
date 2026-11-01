@@ -6,4 +6,4 @@ simPle의 화면 (React + Vite). 실행 방법과 전체 구조는 [루트 READM
 - `npm run build`: `dist/`에 정적 파일 생성
 - `npm run lint`: oxlint 검사
 
-`@game` 별칭은 `shared/game/index.ts`를 가리킨다 (`vite.config.js`, `jsconfig.json`).
+게임 로직은 `@<게임 id>` 별칭으로 불러온다. 예: `@pathblock` → `shared/pathblock/index.ts` (`vite.config.js`, `jsconfig.json`).

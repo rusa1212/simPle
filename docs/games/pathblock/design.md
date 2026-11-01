@@ -108,14 +108,14 @@
 
 ### 세그먼트 1: 게임 로직 모듈 + 테스트 ✅
 
-- `shared/game/`에 순수 TypeScript로 작성 (UI, 서버, AI가 공유)
+- `shared/pathblock/`에 순수 TypeScript로 작성 (UI, 서버, AI가 공유)
 - 이동, 점프, 막대 설치와 BFS 경로 검증, 임시 막대, 철거 도구, 승리 판정
 - 상태를 바꾸지 않고 새 상태를 돌려주는 구조 (무르기 대비)
 - `node:test` 단위 테스트, 막대 설치 검증 중심
 
 ### 세그먼트 2: 로컬 2인 UI ✅
 
-- React에서 `shared/game` 모듈 연결
+- React에서 `shared/pathblock` 모듈 연결
 - SVG로 보드, 말, 막대 그리기
 - 이동 가능한 칸 하이라이트, 클릭으로 이동
 - 막대 종류와 방향 선택, hover 미리보기 (설치 불가 위치는 빨간색)

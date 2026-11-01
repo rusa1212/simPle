@@ -40,7 +40,7 @@
 ## 코드 위치
 
 ```
-shared/game/                 게임 로직과 AI (순수 TypeScript, node:test)
+shared/pathblock/            게임 로직과 AI (순수 TypeScript, node:test)
   game.ts                      상태 생성, 수 검증과 적용
   moves.ts                     말 이동과 점프
   walls.ts                     막대 겹침·교차 판정

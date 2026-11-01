@@ -10,7 +10,7 @@ import {
   previousPlayer,
   variantConfig,
   viewFor,
-} from '@game'
+} from '@pathblock'
 import Board from './components/Board'
 import PlayerPanel from './components/PlayerPanel'
 import Toolbar from './components/Toolbar'

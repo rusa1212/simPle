@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@game": ["../shared/game/index.ts"]
+      "@pathblock": ["../shared/pathblock/index.ts"]
     }
   },
   "include": ["src"]
