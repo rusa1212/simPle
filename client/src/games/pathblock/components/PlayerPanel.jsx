@@ -1,4 +1,4 @@
-import { getPathLengths } from '@game'
+import { getPathLengths } from '@pathblock'
 
 const PLAYER_NAMES = ['A', 'B', 'C', 'D']
 const ITEMS = [

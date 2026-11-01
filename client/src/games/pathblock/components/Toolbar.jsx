@@ -1,4 +1,4 @@
-import { WALL_LENGTH } from '@game'
+import { WALL_LENGTH } from '@pathblock'
 
 const WALL_TOOLS = [
   { kind: 'normal', name: '일반 막대' },

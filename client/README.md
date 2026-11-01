@@ -1,16 +1,9 @@
-# React + Vite
+# client
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+simPle의 화면 (React + Vite). 실행 방법과 전체 구조는 [루트 README](../README.md)를 본다.
 
-Currently, two official plugins are available:
+- `npm run dev`: 개발 서버 (http://localhost:5173, `/api`는 4000번 서버로 프록시)
+- `npm run build`: `dist/`에 정적 파일 생성
+- `npm run lint`: oxlint 검사
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+게임 로직은 `@<게임 id>` 별칭으로 불러온다. 예: `@pathblock` → `shared/pathblock/index.ts` (`vite.config.js`, `jsconfig.json`).
